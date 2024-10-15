@@ -1,0 +1,15 @@
+<div class="products" id="home">
+    <h1>Home</h1>
+    <nav class="products__container">
+    {{#each products}}
+        <div class="product__card">
+            <img src="/assets/{{this.thumbnail}}" alt="{{this.title}}" />
+            <h2>{{this.title}}</h2>
+            <h4>Categoria: {{this.category}}</h4>
+            <p>${{this.price}}</p>
+            <button class="addCart" onclick="addToCart('{{this._id}}')">Agregar al Carrito</button>
+        </div>
+    {{/each}}
+    </nav>
+</div>
+<script src="/products.js"></script>

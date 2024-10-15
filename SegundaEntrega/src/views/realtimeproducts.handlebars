@@ -1,0 +1,22 @@
+<h2>Productos en Tiempo Real</h2>
+<ul id="product-list">
+    {{#each products}}
+        <li>{{this.name}} - Precio: {{this.price}}</li>
+    {{/each}}
+</ul>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    socket.on('connect', () => {
+        console.log('Conectado al servidor de WebSocket');
+    });
+    socket.on('products', (products) => {  
+    const productList = document.getElementById('product-list');
+    productList.innerHTML = ''; 
+    products.forEach(product => {
+        const li = document.createElement('li');
+        li.textContent = `${product.name} - Precio: ${product.price}`;
+        productList.appendChild(li);
+    });
+});
+</script>
