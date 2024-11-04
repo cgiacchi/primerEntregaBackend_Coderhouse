@@ -49,35 +49,69 @@ router.post('/:cid/product/:pid ', async(req, res) => {
         }});
         
         
-    router.delete('/:cid/products/:pid', async (req, res) => {
-        const cartId = req.params.cid;
-        const productId = req.params.pid;
-        const updatedCart = await cartController.removeProduct(cartId, productId);
-        if (!updatedCart) {
-            return res.status(404).send({ error: 'Carrito o producto no encontrado', data: null });
+        router.delete('/:cid/products/:pid', async (req, res) => {
+            const { cid, pid } = req.params;
+            try {
+                const cart = await controller.getOne({ _id: cid });
+                const productIndex = cart.products.findIndex(p => p.product == pid);
+                if (productIndex !== -1) {
+                    cart.products.splice(productIndex, 1);
+                    await cart.save();
+                    res.status(200).json({ status: 'success', message: 'Producto eliminado del carrito' });
+                } else {
+                    res.status(404).json({ status: 'error', message: 'Producto no encontrado en el carrito' });
+                }
+            } catch (err) {
+                res.status(500).json({ status: 'error', message: err.message });
+            }
+        });
+    
+        router.put('/:cid/products/:pid', async (req, res) => {
+            const { cid, pid } = req.params;
+            const { quantity } = req.body;
+            try {
+                const cart = await controller.getOne({ _id: cid });
+                if (!cart) {
+                    return res.status(404).json({ status: 'error', message: 'Carrito no encontrado' });
+                }
+                const product = cart.products.find(p => p.product == pid);
+                if (product) {
+                    product.quantity = quantity;
+                    await cart.save();
+                    res.status(200).json({ status: 'success', message: 'Cantidad actualizada' });
+                } else {
+                    res.status(404).json({ status: 'error', message: 'Producto no encontrado en el carrito' });
+                }
+            } catch (err) {
+                res.status(500).json({ status: 'error', message: err.message });
+            }
+        });
+    
+        router.delete('/:cid', async (req, res) => {
+            const { cid } = req.params;
+            try {
+                await controller.deleteOne({ _id: cid });
+                res.status(200).json({ status: 'success', message: 'Carrito eliminado' });
+            } catch (err) {
+                res.status(500).json({ status: 'error', message: err.message });
+            }
+        });
+        
+    
+    router.put('/:cid', async (req, res) => {
+        const { cid } = req.params;
+        const { products } = req.body;
+        try {
+            const cart = await controller.getOne({ _id: cid });
+            if (!cart) {
+                return res.status(404).json({ status: 'error', message: 'Carrito no encontrado' });
+            }
+            cart.products = products;
+            await cart.save();
+            res.status(200).json({ status: 'success', payload: cart });
+        } catch (err) {
+            res.status(500).json({ status: 'error', message: err.message });
         }
-        res.status(200).send({ error: null, data: updatedCart });
     });
-    
-    router.put('/:cid/products/:pid', async (req, res) => {
-        const cartId = req.params.cid;
-        const productId = req.params.pid;
-        const { quantity } = req.body;
-        const updatedCart = await cartController.updateProductQuantity(cartId, productId, quantity);
-        if (!updatedCart) {
-            return res.status(404).send({ error: 'Carrito o producto no encontrado', data: null });
-        }
-        res.status(200).send({ error: null, data: updatedCart });
-    });
-    
-    router.delete('/:cid', async (req, res) => {
-        const cartId = req.params.cid;
-        const updatedCart = await cartController.removeAllProducts(cartId);
-        if (!updatedCart) {
-            return res.status(404).send({ error: 'Carrito no encontrado', data: null });
-        }
-        res.status(200).send({ error: null, data: updatedCart });
-    });
-    
-    
+
 export default router;

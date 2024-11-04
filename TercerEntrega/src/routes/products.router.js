@@ -10,59 +10,47 @@ const midd1 = (req, res, next) => {
   next();
 };
 
-router.get("/", async (req, res) => {
-  try {
-    const { limit = 10, page = 1, sort, query } = req.query;
-    const limitNumber = parseInt(limit, 10);
-    const pageNumber = parseInt(page, 10);
-    if (isNaN(limitNumber) || limitNumber <= 0) {
-        return res.status(400).send({ error: "El parámetro 'limit' debe ser un número positivo." });
-    }
-    if (isNaN(pageNumber) || pageNumber <= 0) {
-        return res.status(400).send({ error: "El parámetro 'page' debe ser un número positivo." });
-    }
-    const filter = {};
-    if (query) {
-      console.log("si query", query);
-      filter.category = query;
-      console.log("filter::", filter);
-    }
-    let sortOptions;
-    if (sort) {
-      sortOptions = sort; 
-      console.log(sortOptions)
-    }
-    const options = {
-      limit: limitNumber,
-      page: pageNumber,
-      sort: sortOptions,
-      filter: filter, 
-    };
-
-    const data = await controller.get(options); 
-
-    res.status(200).send({ error: null, data });
-  } catch (err) {
-    console.error("Error al obtener productos:", err);
-    res.status(500).send({ error: "Error interno del servidor" });
-  }
-});
+router.get('/', async (req, res) => {
+    const { limit = 10, page = 1, query, sort } = req.query;
+    try {
+        const options = {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            sort: sort === "asc" ? { price: 1 } : sort === "desc" ? { price: -1 } : {}
+        };
+        const response = await controller.get(options, query);
+        res.status(200).json({
+            status: 'success',
+            payload: response.docs,
+            totalPages: response.totalPages,
+            prevPage: response.prevPage,
+            nextPage: response.nextPage,
+            page: response.page,
+            hasPrevPage: response.hasPrevPage,
+            hasNextPage: response.hasNextPage,
+            prevLink: response.hasPrevPage ? `api/products?page=${response.prevPage}&limit=${limit}` : null,
+            nextLink: response.hasNextPage ? `api/products?page=${response.nextPage}&limit=${limit}` : null,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 'error', message: error.message });
+    }});
 
 router.get("/paginated/:pag?", async (req, res) => {
-  const pg = req.params.pag || 1;
-  const data = await controller.getPaginated(pag);
-  res.status(200).send({ error: null, data });
+    const pg = req.params.pag || 1;
+    const data = await controller.getPaginated(pag);
+    res.status(200).send({ error: null, data });
 });
 
 router.get("/all", async (req, res) => {
-  const data = await controller.getAll();
-  res.status(200).send({ error: null, data });
+    const data = await controller.getAll();
+    res.status(200).send({ error: null, data });
 });
 
 router.post("/", async (req, res) => {
-  const { title, description, code, price, stock, category, thumbnails } =
+    const { title, description, code, price, stock, category, thumbnails } =
     req.body;
-  const status = req.body.status === undefined ? true : req.body.status;
+    const status = req.body.status === undefined ? true : req.body.status;
 
   if (
     !title ||
@@ -72,12 +60,10 @@ router.post("/", async (req, res) => {
     status === undefined ||
     !stock ||
     !category
-  ) {
-    return res
-      .status(400).send({ error: "Faltan campos obligatorios", data: [] });
-  }
+    ) {
+    return res.status(400).send({ error: "Faltan campos obligatorios", data: [] });}
 
-  const newProduct = {
+    const newProduct = {
     id: id(10),
     title,
     description,

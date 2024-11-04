@@ -1,38 +1,34 @@
-<div class="product-container">
-    <h1>Productos Disponibles</h1>
-    <ul class="product-list">
+<div class="product-section">
+    <h1>Explora Nuestros Productos</h1>
+    <ul class="products-grid">
         {{#each products.docs}}
-            <li class="product-item">
-                <div class="product-details">
-                    <h3 class="product-name">{{this.title}}</h3>
-                    <p class="product-category">Categoría: {{this.category.name}}</p>
-                    <p class="product-description">{{this.description}}</p>
-                    <p class="product-price">Precio: ${{this.priceList}}</p>
-                    <p class="product-stock">Stock: {{this.stock}}</p>
+            <li class="product-card">
+                <div class="product-header">
+                    <h3>{{this.title}}</h3>
+                    <span class="product-category">{{this.category.name}}</span>
                 </div>
-                <div class="product-controls">
-                    <button class="control-btn" onclick="updateQuantity('{{this.code}}', 'decrease')">-</button>
-                    <input type="text" 
-                           class="quantity-input" 
-                           value="1" 
-                           min="1" 
-                           max="{{this.stock}}" 
-                           data-product-id="{{this.code}}" 
-                           readonly>
-                    <button class="control-btn" onclick="updateQuantity('{{this.code}}', 'increase')">+</button>
-                    <button class="cart-btn" onclick="addToCart('{{this.code}}')">Agregar al carrito</button>
+                <p class="product-description">{{this.description}}</p>
+                <div class="product-footer">
+                    <p class="product-price">Precio: ${{this.priceList}}</p>
+                    <p class="product-stock">En stock: {{this.stock}}</p>
+                    <div class="quantity-controls">
+                        <button onclick="updateQuantity('{{this.code}}', 'decrease')">-</button>
+                        <input type="text" class="quantity-input" value="1" max="{{this.stock}}" readonly>
+                        <button onclick="updateQuantity('{{this.code}}', 'increase')">+</button>
+                    </div>
+                    <button onclick="addToCart('{{this.code}}')" class="add-to-cart-btn">Añadir al carrito</button>
                 </div>
             </li>
         {{/each}}
     </ul>
 
-    <nav class="pagination-nav">
+    <nav class="pagination">
         {{#if products.hasPrevPage}}
-            <a href="/views/?page={{products.prevPage}}&limit={{products.limit}}" class="page-link">« Anterior</a>
+            <a href="?page={{products.prevPage}}&limit={{products.limit}}">Anterior</a>
         {{/if}}
-        <span class="current-page">Página {{products.page}} de {{products.totalPages}}</span>
+        <span>Página {{products.page}} de {{products.totalPages}}</span>
         {{#if products.hasNextPage}}
-            <a href="/views/?page={{products.nextPage}}&limit={{products.limit}}" class="page-link">Siguiente »</a>
+            <a href="?page={{products.nextPage}}&limit={{products.limit}}">Siguiente</a>
         {{/if}}
     </nav>
 </div>
@@ -40,19 +36,12 @@
 <script>
     const updateQuantity = (productId, action) => {
         const input = document.querySelector(`.quantity-input[data-product-id="${productId}"]`);
-        let quantity = parseInt(input.value);
-        const maxStock = parseInt(input.max);
-
-        if (action === 'increase' && quantity < maxStock) {
-            quantity++;
-        } else if (action === 'decrease' && quantity > 1) {
-            quantity--;
-        }
+        const quantity = Math.max(1, Math.min(parseInt(input.max), parseInt(input.value) + (action === 'increase' ? 1 : -1)));
         input.value = quantity;
     };
 
     const addToCart = (productId) => {
         const quantity = document.querySelector(`.quantity-input[data-product-id="${productId}"]`).value;
-        alert(`Producto ${productId} agregado al carrito con cantidad ${quantity}`);
+        Swal.fire(`Producto ${productId} añadido al carrito con cantidad ${quantity}`);
     };
 </script>
