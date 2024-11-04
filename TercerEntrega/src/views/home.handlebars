@@ -1,0 +1,58 @@
+<div class="product-container">
+    <h1>Productos Disponibles</h1>
+    <ul class="product-list">
+        {{#each products.docs}}
+            <li class="product-item">
+                <div class="product-details">
+                    <h3 class="product-name">{{this.title}}</h3>
+                    <p class="product-category">Categoría: {{this.category.name}}</p>
+                    <p class="product-description">{{this.description}}</p>
+                    <p class="product-price">Precio: ${{this.priceList}}</p>
+                    <p class="product-stock">Stock: {{this.stock}}</p>
+                </div>
+                <div class="product-controls">
+                    <button class="control-btn" onclick="updateQuantity('{{this.code}}', 'decrease')">-</button>
+                    <input type="text" 
+                           class="quantity-input" 
+                           value="1" 
+                           min="1" 
+                           max="{{this.stock}}" 
+                           data-product-id="{{this.code}}" 
+                           readonly>
+                    <button class="control-btn" onclick="updateQuantity('{{this.code}}', 'increase')">+</button>
+                    <button class="cart-btn" onclick="addToCart('{{this.code}}')">Agregar al carrito</button>
+                </div>
+            </li>
+        {{/each}}
+    </ul>
+
+    <nav class="pagination-nav">
+        {{#if products.hasPrevPage}}
+            <a href="/views/?page={{products.prevPage}}&limit={{products.limit}}" class="page-link">« Anterior</a>
+        {{/if}}
+        <span class="current-page">Página {{products.page}} de {{products.totalPages}}</span>
+        {{#if products.hasNextPage}}
+            <a href="/views/?page={{products.nextPage}}&limit={{products.limit}}" class="page-link">Siguiente »</a>
+        {{/if}}
+    </nav>
+</div>
+
+<script>
+    const updateQuantity = (productId, action) => {
+        const input = document.querySelector(`.quantity-input[data-product-id="${productId}"]`);
+        let quantity = parseInt(input.value);
+        const maxStock = parseInt(input.max);
+
+        if (action === 'increase' && quantity < maxStock) {
+            quantity++;
+        } else if (action === 'decrease' && quantity > 1) {
+            quantity--;
+        }
+        input.value = quantity;
+    };
+
+    const addToCart = (productId) => {
+        const quantity = document.querySelector(`.quantity-input[data-product-id="${productId}"]`).value;
+        alert(`Producto ${productId} agregado al carrito con cantidad ${quantity}`);
+    };
+</script>
